@@ -4,7 +4,6 @@ import {
   router,
 } from './trpc'
 import { TRPCError } from '@trpc/server'
-import { db } from '@/db'
 import { z } from 'zod'
 import { INFINITE_QUERY_LIMIT } from '@/config/infinite-query'
 import { absoluteUrl } from '@/lib/utils'
@@ -15,6 +14,10 @@ import {
 import { PLANS } from '@/config/stripe'
 import { SignedIn, auth } from "@clerk/nextjs";
 import { getUserById } from "@/lib/actions/user.actions";
+import User from "@/lib/database/models/user.model";
+import Message from "@/lib/database/models/message.model";
+import File from "@/lib/database/models/file.model";
+import { connectToDatabase } from "@/lib/database/mongoose";
 
 export const appRouter = router({
   authCallback: publicProcedure.query(async () => {
@@ -22,11 +25,13 @@ export const appRouter = router({
     const { userId } = auth();
     const user = await getUserById(userId);
 
+    await connectToDatabase();
+
     if (!user.id || !user.email)
       throw new TRPCError({ code: 'UNAUTHORIZED' })
 
     // check if the user is in the database
-    const dbUser = await db.user.findFirst({
+    const dbUser = await User.findOne({
       where: {
         id: user.id,
       },
@@ -34,7 +39,7 @@ export const appRouter = router({
 
     if (!dbUser) {
       // create user in db
-      await db.user.create({
+      await User.create({
         data: {
           id: user.id,
           email: user.email,
@@ -47,7 +52,7 @@ export const appRouter = router({
   getUserFiles: privateProcedure.query(async ({ ctx }) => {
     const { userId } = ctx
 
-    return await db.file.findMany({
+    return await File.find({
       where: {
         userId,
       },
@@ -63,7 +68,7 @@ export const appRouter = router({
       if (!userId)
         throw new TRPCError({ code: 'UNAUTHORIZED' })
 
-      const dbUser = await db.user.findFirst({
+      const dbUser = await User.findOne({
         where: {
           id: userId,
         },
@@ -125,7 +130,7 @@ export const appRouter = router({
       const { fileId, cursor } = input
       const limit = input.limit ?? INFINITE_QUERY_LIMIT
 
-      const file = await db.file.findFirst({
+      const file = await File.findOne({
         where: {
           id: fileId,
           userId,
@@ -134,7 +139,7 @@ export const appRouter = router({
 
       if (!file) throw new TRPCError({ code: 'NOT_FOUND' })
 
-      const messages = await db.message.findMany({
+      const messages = await Message.find({
         take: limit + 1,
         where: {
           fileId,
@@ -166,7 +171,7 @@ export const appRouter = router({
   getFileUploadStatus: privateProcedure
     .input(z.object({ fileId: z.string() }))
     .query(async ({ input, ctx }) => {
-      const file = await db.file.findFirst({
+      const file = await File.findOne({
         where: {
           id: input.fileId,
           userId: ctx.userId,
@@ -183,7 +188,7 @@ export const appRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx
 
-      const file = await db.file.findFirst({
+      const file = await File.findOne({
         where: {
           key: input.key,
           userId,
@@ -200,7 +205,7 @@ export const appRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx
 
-      const file = await db.file.findFirst({
+      const file = await File.findOne({
         where: {
           id: input.id,
           userId,
@@ -209,7 +214,7 @@ export const appRouter = router({
 
       if (!file) throw new TRPCError({ code: 'NOT_FOUND' })
 
-      await db.file.delete({
+      await File.deleteOne({
         where: {
           id: input.id,
         },

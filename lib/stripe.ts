@@ -1,8 +1,9 @@
 import { PLANS } from '@/config/stripe'
-import { db } from '@/db'
 import Stripe from 'stripe'
 import { SignedIn, auth } from "@clerk/nextjs";
 import { getUserById } from "@/lib/actions/user.actions";
+import User from "@/lib/database/models/user.model";
+import { connectToDatabase } from "@/lib/database/mongoose";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
   //apiVersion: '2023-08-16',
@@ -23,7 +24,9 @@ export async function getUserSubscriptionPlan() {
     }
   }
 
-  const dbUser = await db.user.findFirst({
+  await connectToDatabase();
+
+  const dbUser = await User.findOne({
     where: {
       id: user.id,
     },

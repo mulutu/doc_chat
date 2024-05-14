@@ -1,4 +1,3 @@
-import { db } from '@/db'
 import {
   createUploadthing,
   type FileRouter,
@@ -12,6 +11,8 @@ import { getUserSubscriptionPlan } from '@/lib/stripe'
 import { PLANS } from '@/config/stripe'
 import { SignedIn, auth } from "@clerk/nextjs";
 import { getUserById } from "@/lib/actions/user.actions";
+import File from "@/lib/database/models/file.model";
+import { connectToDatabase } from "@/lib/database/mongoose";
 
 const f = createUploadthing()
 
@@ -40,7 +41,10 @@ const onUploadComplete = async ({
     url: string
   }
 }) => {
-  const isFileExist = await db.file.findFirst({
+
+  await connectToDatabase();
+
+  const isFileExist = await File.findOne({
     where: {
       key: file.key,
     },
@@ -48,7 +52,7 @@ const onUploadComplete = async ({
 
   if (isFileExist) return
 
-  const createdFile = await db.file.create({
+  const createdFile = await File.create({
     data: {
       key: file.key,
       name: file.name,
@@ -86,7 +90,7 @@ const onUploadComplete = async ({
       (isSubscribed && isProExceeded) ||
       (!isSubscribed && isFreeExceeded)
     ) {
-      await db.file.update({
+      await File.updateOne({
         data: {
           uploadStatus: 'FAILED',
         },
@@ -113,7 +117,7 @@ const onUploadComplete = async ({
       }
     )
 
-    await db.file.update({
+    await File.updateOne({
       data: {
         uploadStatus: 'SUCCESS',
       },
@@ -122,7 +126,7 @@ const onUploadComplete = async ({
       },
     })
   } catch (err) {
-    await db.file.update({
+    await File.updateOne({
       data: {
         uploadStatus: 'FAILED',
       },
