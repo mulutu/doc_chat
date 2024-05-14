@@ -31,7 +31,7 @@ const ChatInput = ({ isDisabled }: ChatInputProps) => {
                 autoFocus
                 onChange={handleInputChange}
                 value={message}
-                onKeyDown={(e) => {
+                onKeyDown={(e :  any) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault()
 
