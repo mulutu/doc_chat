@@ -153,7 +153,7 @@ export const ChatContextProvider = ({
             let isAiResponseCreated = old.pages.some(
               (page) =>
                 page.messages.some(
-                  (message) => message.id === 'ai-response'
+                  (message : any) => message.id === 'ai-response'
                 )
             )
 
@@ -173,7 +173,7 @@ export const ChatContextProvider = ({
                   ]
                 } else {
                   updatedMessages = page.messages.map(
-                    (message) => {
+                    (message : any) => {
                       if (message.id === 'ai-response') {
                         return {
                           ...message,
