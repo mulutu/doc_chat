@@ -1,4 +1,4 @@
-import { db } from '@/db'
+import { connectToDatabase } from "@/lib/database/mongoose";
 import { openai } from '@/lib/openai'
 import { getPineconeClient } from '@/lib/pinecone'
 import { SendMessageValidator } from '@/lib/validators/SendMessageValidator'
@@ -7,6 +7,9 @@ import { PineconeStore } from 'langchain/vectorstores/pinecone'
 import { NextRequest } from 'next/server'
 import { SignedIn, auth } from "@clerk/nextjs";
 import { getUserById } from "@/lib/actions/user.actions";
+
+import File from "@/lib/database/models/file.model";
+import Message from "@/lib/database/models/message.model"
 
 import { OpenAIStream, StreamingTextResponse } from 'ai'
 
@@ -24,7 +27,8 @@ export const POST = async (req: NextRequest) => {
   const { fileId, message } =
     SendMessageValidator.parse(body)
 
-  const file = await db.file.findFirst({
+  await connectToDatabase();
+  const file = await File.findOne({
     where: {
       id: fileId,
       userId,
@@ -34,7 +38,7 @@ export const POST = async (req: NextRequest) => {
   if (!file)
     return new Response('Not found', { status: 404 })
 
-  await db.message.create({
+  await Message.create({
     data: {
       text: message,
       isUserMessage: true,
@@ -64,7 +68,7 @@ export const POST = async (req: NextRequest) => {
     4
   )
 
-  const prevMessages = await db.message.findMany({
+  const prevMessages = await Message.find({
     where: {
       fileId,
     },
@@ -74,7 +78,7 @@ export const POST = async (req: NextRequest) => {
     take: 6,
   })
 
-  const formattedPrevMessages = prevMessages.map((msg :  any) => ({
+  const formattedPrevMessages = prevMessages.map((msg: any) => ({
     role: msg.isUserMessage
       ? ('user' as const)
       : ('assistant' as const),
@@ -98,11 +102,11 @@ export const POST = async (req: NextRequest) => {
   \n----------------\n
   
   PREVIOUS CONVERSATION:
-  ${formattedPrevMessages.map((message :  any) => {
-    if (message.role === 'user')
-      return `User: ${message.content}\n`
-    return `Assistant: ${message.content}\n`
-  })}
+  ${formattedPrevMessages.map((message: any) => {
+          if (message.role === 'user')
+            return `User: ${message.content}\n`
+          return `Assistant: ${message.content}\n`
+        })}
   
   \n----------------\n
   
@@ -116,7 +120,7 @@ export const POST = async (req: NextRequest) => {
 
   const stream = OpenAIStream(response, {
     async onCompletion(completion) {
-      await db.message.create({
+      await Message.create({
         data: {
           text: completion,
           isUserMessage: false,

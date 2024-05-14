@@ -1,5 +1,4 @@
 import Dashboard from '@/components/Dashboard'
-import { db } from '@/db'
 import { getUserSubscriptionPlan } from '@/lib/stripe'
 import { redirect } from 'next/navigation'
 import { SignedIn, auth } from "@clerk/nextjs";
