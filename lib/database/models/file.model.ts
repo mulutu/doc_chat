@@ -25,7 +25,7 @@ export interface File extends Document {
 
 
 const FileSchema = new Schema({
-    id: { type:  number, required: true, unique: true},
+    //id: { type:  number, required: true, unique: true},
     name: { type: String, required: true },
     uploadStatus: { type: UploadStatus, required: true, default: UploadStatus.PENDING },
     url: { type: String, required: true },
