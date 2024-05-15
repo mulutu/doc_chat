@@ -19,8 +19,9 @@ const f = createUploadthing()
 const middleware = async () => {
 
   const { userId } = auth();
-  
   const user = await getUserById(userId);
+
+  console.log("API/UPLOADTHING")
 
 
   if (!user || !user.id) throw new Error('Unauthorized')

@@ -11,6 +11,8 @@ const Page = async () => {
 
   const user = await getUserById(userId);
 
+  console.log("DASHBOARD: ====================================================>")
+
   /*const dbUser = await db.user.findFirst({
     where: {
       id: user.id
