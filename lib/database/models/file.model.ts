@@ -26,10 +26,10 @@ export interface File extends Document {
 
 const FileSchema = new Schema({
     //id: { type:  number, required: true, unique: true},
-    name: { type: String, required: true },
-    uploadStatus: { type: String, required: true, default: 'PENDING' },
-    url: { type: String, required: true },
-    key: { type: String, required: true },
+    name: { type: String },
+    uploadStatus: { type: String, default: 'PENDING' },
+    url: { type: String },
+    key: { type: String },
     messages: { 
         type: Schema.Types.ObjectId,
         ref: 'Message',
@@ -37,7 +37,7 @@ const FileSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     User: { type: Schema.Types.ObjectId, ref: 'User' },
-    userId: { type: String, required: true }
+    userId: { type: String }
 });
 
 const File = models?.File || model('File', FileSchema);

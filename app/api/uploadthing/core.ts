@@ -21,14 +21,15 @@ const middleware = async () => {
   const { userId } = auth();
   const user = await getUserById(userId);
 
-  console.log("API/UPLOADTHING")
+  console.log("API/UPLOADTHING: " + JSON.stringify(user))
 
 
-  if (!user || !user.id) throw new Error('Unauthorized')
+
+  if (!user || !user._id) throw new Error('Unauthorized')
 
   const subscriptionPlan = await getUserSubscriptionPlan()
 
-  return { subscriptionPlan, userId: user.id }
+  return { subscriptionPlan, userId: user._id }
 }
 
 const onUploadComplete = async ({
